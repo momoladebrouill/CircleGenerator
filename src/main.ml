@@ -35,40 +35,37 @@ let generate_circle r =
             l
     in
     let huitieme = loop (0, r , 5 - 4*r) [] in
-    let swapxy (x,y,z) = (y,x,z) in
-    let quart = huitieme @ (List.map swapxy huitieme) in
-    let demi = quart @ (List.map (fun (x,y,z) -> (-.x,y,z)) quart )in
-     demi @ (List.map (fun (x,y,z) -> (x,-.y,z)) demi)
+    let quart = huitieme @ (List.map (fun  (x,y,z) -> y,x,z) huitieme) in
+    let demi = quart @ (List.map (fun (x,y,z) -> -.x,y,z) quart) in
+     demi @ (List.map (fun (x,y,z) -> x,-.y,z) demi)
 
 let rec generate_circle_full i = 
     if i = 0 then []
     else (generate_circle i) @ generate_circle_full (i-1)
     
-
-
 let draw s = 
      clear_background Color.black;
      begin_mode_3d s.camera;
      draw_cube zero 1.0 1.0 1.0 Color.raywhite; 
-     draw_grid 100 10.0;
      let l = List.length s.cubes in
-     List.iteri (fun i pos -> if i <= iof s.t then 
+     List.iteri (fun i pos -> if i <= iof (5.0*.s.t) then 
       draw_cube (r3_to_vec3 pos) 1.0 1.0 1.0 (color_from_hsv (foi (i*360/l)) 1. 1.);
       ()
       ) s.cubes;
      end_mode_3d ();
-     draw_text "Space S X arrows" 10 10 20 Color.white;
      begin_drawing ();
+     draw_text "Space S X arrows" 10 10 20 Color.white;
      end_drawing ()
 
-let update s = {
-             camera = s.camera;
-             cubes = sinus s.t s.cubes;
-             t = s.t +. 0.1;
-          }
+let update s =
+    {
+    camera = s.camera;
+    cubes = sinus s.t s.cubes;
+    t = s.t +. 0.1;
+}
 
 let rec loop s =
-     if Raylib.window_should_close () then Raylib.close_window () else 
+     if Raylib.window_should_close () then Raylib.close_window () else begin 
          draw s;
          Camera3D.set_projection s.camera CameraProjection.Perspective;
          update_camera (addr s.camera) CameraMode.Third_person;
@@ -76,6 +73,7 @@ let rec loop s =
          Vector3.set_x (Camera3D.target s.camera) 0.0 (*s.t |> iof |> List.nth s.cubes |> fst*);
          Vector3.set_z (Camera3D.target s.camera) 0.0 (*s.t |> iof |> List.nth s.cubes |> snd*);
          loop (update s) 
+    end
 
 let setup () =
   Raylib.init_window w h "vichy";
